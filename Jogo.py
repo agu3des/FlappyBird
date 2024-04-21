@@ -44,20 +44,20 @@ class Bird:
         self.height = self.y
 
     def move(self):
-        # calcular o deslocamento
+        # calcular o displacement
         self.time += 1 #a cada frame
-        deslocamento = 1.5 * (self.time**2) + self.speed * self.time #formula da aceleracao
+        displacement = 1.5 * (self.time**2) + self.speed * self.time #formula da aceleracao
 
-        # restringir o deslocamento
-        if deslocamento > 16:
-            deslocamento = 16
-        elif deslocamento < 0:
-            deslocamento -= 2 #quando jogar pra cima, dá um ganho extra
+        # restringir o displacement
+        if displacement > 16:
+            displacement = 16
+        elif displacement < 0:
+            displacement -= 2 #quando jogar pra cima, dá um ganho extra
 
-        self.y += deslocamento
+        self.y += displacement
 
-        # o angulo do passaro
-        if deslocamento < 0 or self.y < (self.altura + 50): 
+        # o angulo do bird
+        if displacement < 0 or self.y < (self.altura + 50): 
             #onde ele tá, a ultima vez que ele pulou, se a posicao y tiver abaixo deixa
             if self.angulo < self.maximumRotation:
                 self.angulo = self.maximumRotation
@@ -65,13 +65,13 @@ class Bird:
             if self.angulo > -90:
                 self.angulo -= self.rotationSpeed
 
-    def desenhar(self, tela):
-        # definir qual imagem do passaro vai usar
+    def drawing(self, tela):
+        # definir qual imagem do bird vai usar
         self.counterImage += 1
 
-        #bater de asa do passaro
+        #bater de asa do bird
         if self.counterImage < self.timeAnimation:
-            self.image = self.imgs[0] #a cada 5 frames eu mudo a imagem do passaro
+            self.image = self.imgs[0] #a cada 5 frames eu mudo a imagem do bird
         elif self.counterImage < self.timeAnimation*2:
             self.image = self.imgs[1]
         elif self.counterImage < self.timeAnimation*3:
@@ -83,25 +83,25 @@ class Bird:
             self.counterImage = 0 #volta para o início
 
 
-        # se o passaro tiver caindo eu não vou bater asa
+        # se o bird tiver caindo eu não vou bater asa
         if self.angle <= -80:
             self.image = self.imgs[1]
             self.counterImage = self.timeAnimation*2
 
-        # desenhar a imagem
-        imagem_rotacionada = pygame.transform.rotate(self.image, self.angle)
-        pos_centro_imagem = self.image.get_rect(topleft=(self.x, self.y)).center
-        retangulo = imagem_rotacionada.get_rect(center=pos_centro_imagem)
-        tela.blit(imagem_rotacionada, retangulo.topleft) #a esquerda
+        # drawing a imagem
+        rotatedImage = pygame.transform.rotate(self.image, self.angle)
+        posCenterImage = self.image.get_rect(topleft=(self.x, self.y)).center
+        rectangle = rotatedImage.get_rect(center=posCenterImage)
+        tela.blit(rotatedImage, rectangle.topleft) #a esquerda
 
-    def get_mask(self):
+    def getMask(self):
         return pygame.mask.from_surface(self.image)
     #divide o quadrado criado em pixels
-    #vai analizar se no mesmo pixel tem um cano e um passaro
+    #vai analizar se no mesmo pixel tem um cano e um bird
 
 
 class Pipe:
-    distance = 200 #distancia entre os canos (cima e baixo)
+    distance = 200 #distance entre os canos (cima e baixo)
     speed = 5 #movimenta fixo
 
     def __init__(self, x):
@@ -117,27 +117,27 @@ class Pipe:
     def defineHeight(self):
         self.height = random.randrange(50, 450) #o cano so pode ser criado daqui ate aqui
         self.afterTop = self.height - self.pipeTop.get_height() #altura do topo - altura do cano
-        self.afterBase = self.height + self.distance #altura da base altura + a distancia entre os canos
+        self.afterBase = self.height + self.distance #altura da base altura + a distance entre os canos
 
     def move(self):
         self.x -= self.speed
 
-    def desenhar(self, screen):
+    def drawing(self, screen):
         screen.blit(self.pipeTop, (self.x, self.afterTop)) #uma tupla
         screen.blit(self.pipeBase, (self.x, self.afterBase))
 
     def colidir(self, bird):
-        passaro_mask = bird.get_mask() 
-        topo_mask = pygame.mask.from_surface(self.pipeTop) 
-        base_mask = pygame.mask.from_surface(self.pipeBase)
+        birdMask = bird.getMask() 
+        topMask = pygame.mask.from_surface(self.pipeTop) 
+        baseMask = pygame.mask.from_surface(self.pipeBase)
 
-        distancia_topo = (self.x - bird.x, self.pos_topo - round(bird.y))
-        distancia_base = (self.x - bird.x, self.pos_base - round(bird.y))
+        topDistance = (self.x - bird.x, self.pos_topo - round(bird.y))
+        baseDistance = (self.x - bird.x, self.pos_base - round(bird.y))
 
-        topo_ponto = passaro_mask.overlap(topo_mask, distancia_topo)
-        base_ponto = passaro_mask.overlap(base_mask, distancia_base)
+        topPoint = birdMask.overlap(topMask, topDistance)
+        basePoint = birdMask.overlap(baseMask, baseDistance)
 
-        if base_ponto or topo_ponto:
+        if basePoint or topPoint:
             return True
         else:
             return False
@@ -162,21 +162,21 @@ class Floor:
         if self.x2 + self.width < 0:
             self.x2 = self.x1 + self.width
 
-    def desenhar(self, screen):
+    def drawing(self, screen):
         screen.blit(self.image, (self.x1, self.y))
         screen.blit(self.image, (self.x2, self.y))
 
 
-def desenharScreen(screen, birds, pipes, floor, points):
+def drawingScreen(screen, birds, pipes, floor, points):
     screen.blit(imageBackground, (0, 0))
     for bird in birds:
-        bird.desenhar(screen)
+        bird.drawing(screen)
     for pipe in pipes:
-        pipe.desenhar(screen)
+        pipe.drawing(screen)
 
-    texto = fontPoints.render(f"Pontuação: {points}", 1, (255, 255, 255))
-    screen.blit(texto, (widthScreen - 10 - texto.get_width(), 10))
-    floor.desenhar(screen)
+    text = fontPoints.render(f"Pontuação: {points}", 1, (255, 255, 255))
+    screen.blit(text, (widthScreen - 10 - text.get_width(), 10))
+    floor.drawing(screen)
     pygame.display.update()
 
 
@@ -188,50 +188,50 @@ def main():
     points = 0
     clock = pygame.time.Clock()
 
-    rodando = True
-    while rodando:
+    running = True
+    while running:
         clock.tick(30)
 
         # interação com o usuário
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                rodando = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
                 pygame.quit()
                 quit()
-            if evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_SPACE:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
                     for bird in birds:
-                        bird.pular()
+                        bird.jump()
 
         # mover as coisas
         for bird in birds:
             bird.move()
         floor.move()
 
-        adicionar_cano = False
-        remover_canos = []
+        addPipe = False
+        removePipe = []
         for pipe in pipes:
             for i, bird in enumerate(birds):
                 if pipe.colidir(bird):
                     bird.pop(i)
-                if not pipe.passou and bird.x > pipe.x:
-                    pipe.passou = True
-                    adicionar_cano = True
+                if not pipe.passed and bird.x > pipe.x:
+                    pipe.passed = True
+                    addPipe = True
             pipe.move()
             if pipe.x + pipe.pipeTop.get_width() < 0:
-                remover_canos.append(pipe)
+                removePipe.append(pipe)
 
-        if adicionar_cano:
+        if addPipe:
             points += 1
             pipes.append(Pipe(600))
-        for pipe in remover_canos:
+        for pipe in removePipe:
             pipes.remove(pipe)
 
         for i, bird in enumerate(birds):
             if (bird.y + bird.image.get_height()) > floor.y or bird.y < 0:
                 birds.pop(i)
 
-        desenharScreen(screen, birds, pipes, floor, points)
+        drawingScreen(screen, birds, pipes, floor, points)
 
 
 if __name__ == '__main__':
